@@ -1,27 +1,39 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news/api/Apimaneger.dart';
 import 'package:news/model/newsRespones/news.dart';
 
-class NewsListViewModel extends ChangeNotifier {
-  List<News>? newsList;
-  String? errorMessage;
-  bool? showLoading;
-  getNews(String categoryID) async {
-    showLoading = true;
-    errorMessage =null;
-    newsList = null;
-    notifyListeners();
+class NewsListViewModel extends Cubit<NewsListState> {
+  NewsListViewModel() : super(LoadingState("message"));
+  void loadNews(String? newsId) async {
+    emit(LoadingState('Loading...'));
     try {
-      var response = await Apimaneger.getnews(categoryID);
-      showLoading = false;
-      notifyListeners();
+      var response = await Apimaneger.getnews(newsId);
       if (response.status == 'error') {
-        errorMessage = response.message;
+        emit(ErrorState(response.message ?? ""));
       } else {
-        newsList = response.articles;
+        emit(SuccessState(response.articles));
       }
     } catch (e) {
-      errorMessage = e.toString();
+      emit(ErrorState(e.toString()));
     }
   }
+}
+
+sealed class NewsListState {}
+
+class SuccessState extends NewsListState {
+  List<News>? newsList;
+  SuccessState(this.newsList);
+}
+
+class LoadingState extends NewsListState {
+  String? message;
+
+  LoadingState(this.message);
+}
+
+class ErrorState extends NewsListState {
+  String? errorMessage;
+
+  ErrorState(this.errorMessage);
 }

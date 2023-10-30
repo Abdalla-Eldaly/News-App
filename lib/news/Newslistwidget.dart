@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news/api/Apimaneger.dart';
 import 'package:news/model/sourceResponse/Source.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,7 @@ class NewsListWidget extends StatefulWidget {
  Source source;
   NewsListWidget(this.source, {super.key});
 
+
   @override
   State<NewsListWidget> createState() => _NewsListWidgetState();
 }
@@ -19,42 +21,57 @@ class _NewsListWidgetState extends State<NewsListWidget> {
 var viewModel = NewsListViewModel();
 @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    viewModel.getNews(widget.source.id??"");
+    viewModel.loadNews(widget.source.id);
   }
   @override
   Widget build(BuildContext context) {
 
 
-    return ChangeNotifierProvider(
-      create: (context) => viewModel,
-      child: Consumer<NewsListViewModel>(builder: (context, viewModel, child) {
-            if (viewModel.showLoading==true) {
-              return Center(child: CircularProgressIndicator());
+    return BlocBuilder<NewsListViewModel, NewsListState>(
+      bloc: viewModel,
+      builder: (context, state) {
+        switch (state) {
+          case SuccessState():
+            {
+              var newsList = state.newsList;
+
+            return ListView.builder(
+                  itemBuilder: (context, index) {
+                    return NewsWidget(newsList![index]);
+                  },
+                  itemCount: newsList?.length ?? 0,
+                );
             }
-            if (viewModel.errorMessage!=null) {
+          case LoadingState():
+            {
+              return Center(child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  Text('Loading...')
+                ],
+              ));
+            }
+          case ErrorState():
+            {
               return Center(
                 child: Column(
                   children: [
-                    Text(viewModel.errorMessage??""),
-                    ElevatedButton(onPressed: () {
-                      viewModel.getNews(widget.source.id??"");
-                    }, child: Text('Try Again'))
+                    Text(state.errorMessage ?? ""),
+                    ElevatedButton(
+                        onPressed: () {
+                          viewModel.loadNews(widget.source.id);
+                        },
+                        child: Text('try again')),
                   ],
                 ),
               );
             }
-            var newsList = viewModel.newsList;
-
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                return NewsWidget(newsList![index]);
-              },
-              itemCount: newsList?.length ?? 0,
-            );
-      } ,),
+        }
+      },
     );
+
 
     // call api
     // return FutureBuilder(
