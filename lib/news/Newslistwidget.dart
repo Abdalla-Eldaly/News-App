@@ -3,31 +3,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news/api/Apimaneger.dart';
 import 'package:news/model/sourceResponse/Source.dart';
 import 'package:provider/provider.dart';
-
 import 'NewsListViewModel.dart';
 import 'newswidget.dart';
 
-
 class NewsListWidget extends StatefulWidget {
- Source source;
+  Source source;
   NewsListWidget(this.source, {super.key});
-
 
   @override
   State<NewsListWidget> createState() => _NewsListWidgetState();
 }
 
 class _NewsListWidgetState extends State<NewsListWidget> {
-var viewModel = NewsListViewModel();
-@override
+  var viewModel = NewsListViewModel();
+  @override
   void initState() {
     super.initState();
     viewModel.loadNews(widget.source.id);
   }
+
   @override
   Widget build(BuildContext context) {
-
-
     return BlocBuilder<NewsListViewModel, NewsListState>(
       bloc: viewModel,
       builder: (context, state) {
@@ -36,21 +32,19 @@ var viewModel = NewsListViewModel();
             {
               var newsList = state.newsList;
 
-            return ListView.builder(
-                  itemBuilder: (context, index) {
-                    return NewsWidget(newsList![index]);
-                  },
-                  itemCount: newsList?.length ?? 0,
-                );
+              return ListView.builder(
+                itemBuilder: (context, index) {
+                  return NewsWidget(newsList![index]);
+                },
+                itemCount: newsList?.length ?? 0,
+              );
             }
           case LoadingState():
             {
-              return Center(child: Column(
+              return Center(
+                  child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  Text('Loading...')
-                ],
+                children: [CircularProgressIndicator(), Text('Loading...')],
               ));
             }
           case ErrorState():
@@ -71,7 +65,6 @@ var viewModel = NewsListViewModel();
         }
       },
     );
-
 
     // call api
     // return FutureBuilder(
@@ -100,11 +93,5 @@ var viewModel = NewsListViewModel();
     //     );
     //   },
     // );
-
-
-
-
-
-
   }
 }
